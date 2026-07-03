@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Maintenance Console</title>
+
+  <!-- Standard Tailwind CDN, dark-mode operator theme. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; }
+    .term-scroll::-webkit-scrollbar { width: 8px; }
+    .term-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+    .term-scroll::-webkit-scrollbar-track { background: transparent; }
+    /* iOS-style toggle */
+    .toggle-track { transition: background-color 0.2s ease; }
+    .toggle-knob { transition: transform 0.2s ease; }
+    .toggle-on .toggle-track { background-color: #6366f1; }
+    .toggle-on .toggle-knob { transform: translateX(20px); }
+  </style>
+</head>
+
+<body class="font-sans bg-zinc-950 text-zinc-200 min-h-screen">
+
+  <div class="max-w-6xl mx-auto p-4 sm:p-8">
+
+    <!-- ===================== HEADER ===================== -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-indigo-500/15 ring-1 ring-indigo-500/30 flex items-center justify-center">
+          <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold text-white tracking-tight">Maintenance Console</h1>
+          <p class="text-xs text-zinc-500">Single-tenant scheduling infrastructure · Operator view</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="healthDot" class="w-2.5 h-2.5 rounded-full bg-zinc-600"></span>
+        <span id="healthLabel" class="text-xs font-medium text-zinc-400 tracking-wide uppercase">Status: Idle</span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- ===================== LEFT COLUMN ===================== -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- SYSTEM GATEWAYS STATUS MATRIX -->
+        <section class="rounded-2xl bg-zinc-900/70 ring-1 ring-zinc-800 p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-sm font-semibold text-white uppercase tracking-wider">System Gateways</h2>
+            <span class="text-[11px] text-zinc-500">Primary application switches</span>
+          </div>
+
+          <div class="space-y-1">
+            <!-- Toggle: Accepting Live Appointments -->
+            <div class="flex items-center justify-between py-3 border-b border-zinc-800/70" data-toggle="appointments">
+              <div>
+                <p class="text-sm font-medium text-zinc-100">Accepting Live Appointments</p>
+                <p class="text-xs text-zinc-500">Public booking endpoint is open</p>
+              </div>
+              <button type="button" class="toggle-btn toggle-on relative" onclick="flipToggle(this, 'Accepting Live Appointments')" aria-label="Toggle appointments">
+                <span class="toggle-track block w-11 h-6 rounded-full bg-zinc-700"></span>
+                <span class="toggle-knob absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow"></span>
+              </button>
+            </div>
+
+            <!-- Toggle: Google Meet Integration -->
+            <div class="flex items-center justify-between py-3 border-b border-zinc-800/70" data-toggle="meet">
+              <div>
+                <p class="text-sm font-medium text-zinc-100">Google Meet Integration</p>
+                <p class="text-xs text-zinc-500">Auto-generate conference links on booking</p>
+              </div>
+              <button type="button" class="toggle-btn toggle-on relative" onclick="flipToggle(this, 'Google Meet Integration')" aria-label="Toggle meet">
+                <span class="toggle-track block w-11 h-6 rounded-full bg-zinc-700"></span>
+                <span class="toggle-knob absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow"></span>
+              </button>
+            </div>
+
+            <!-- Toggle: Asynchronous Alert Webhooks -->
+            <div class="flex items-center justify-between py-3" data-toggle="webhooks">
+              <div>
+                <p class="text-sm font-medium text-zinc-100">Asynchronous Alert Webhooks</p>
+                <p class="text-xs text-zinc-500">Push booking events to downstream listeners</p>
+              </div>
+              <button type="button" class="toggle-btn relative" onclick="flipToggle(this, 'Asynchronous Alert Webhooks')" aria-label="Toggle webhooks">
+                <span class="toggle-track block w-11 h-6 rounded-full bg-zinc-700"></span>
+                <span class="toggle-knob absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow"></span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- DIAGNOSTIC ACTION GRID -->
+        <section class="rounded-2xl bg-zinc-900/70 ring-1 ring-zinc-800 p-6">
+          <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-5">Diagnostic Actions</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" onclick="testCalendar(this)"
+              class="diag-btn group rounded-xl bg-zinc-800/80 hover:bg-zinc-800 ring-1 ring-zinc-700 hover:ring-indigo-500/50 px-4 py-4 text-left transition">
+              <svg class="w-5 h-5 text-indigo-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <p class="text-sm font-medium text-zinc-100">Test Calendar</p>
+              <p class="text-xs text-zinc-500 mt-0.5">Verify connectivity</p>
+            </button>
+
+            <button type="button" onclick="testLock(this)"
+              class="diag-btn group rounded-xl bg-zinc-800/80 hover:bg-zinc-800 ring-1 ring-zinc-700 hover:ring-indigo-500/50 px-4 py-4 text-left transition">
+              <svg class="w-5 h-5 text-emerald-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <p class="text-sm font-medium text-zinc-100">Mutex Latency</p>
+              <p class="text-xs text-zinc-500 mt-0.5">Probe LockService</p>
+            </button>
+
+            <button type="button" onclick="purgeCache(this)"
+              class="diag-btn group rounded-xl bg-zinc-800/80 hover:bg-zinc-800 ring-1 ring-zinc-700 hover:ring-indigo-500/50 px-4 py-4 text-left transition">
+              <svg class="w-5 h-5 text-rose-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <p class="text-sm font-medium text-zinc-100">Purge Cache</p>
+              <p class="text-xs text-zinc-500 mt-0.5">Clear transient state</p>
+            </button>
+          </div>
+        </section>
+
+        <!-- REAL-TIME EVENT LOG CONSOLE -->
+        <section class="rounded-2xl bg-black ring-1 ring-zinc-800 overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2.5 bg-zinc-900/80 border-b border-zinc-800">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-400/80"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+              <span class="ml-3 text-xs text-zinc-500 font-mono">system.log — live stream</span>
+            </div>
+            <button type="button" onclick="clearLog()" class="text-xs text-zinc-500 hover:text-zinc-300 transition">clear</button>
+          </div>
+          <div id="terminal" class="term-scroll font-mono text-[12.5px] leading-relaxed p-4 h-72 overflow-y-auto space-y-1"></div>
+        </section>
+      </div>
+
+      <!-- ===================== RIGHT COLUMN ===================== -->
+      <div class="space-y-6">
+
+        <!-- LIVE PARAMETER VIEWPORTS -->
+        <section class="rounded-2xl bg-zinc-900/70 ring-1 ring-zinc-800 p-6">
+          <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-5">Live Parameters</h2>
+          <dl class="space-y-4">
+            <div class="flex items-center justify-between">
+              <dt class="text-sm text-zinc-400">Working window</dt>
+              <dd id="pWindow" class="text-sm font-mono text-indigo-300">— : —</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-sm text-zinc-400">Meeting length</dt>
+              <dd id="pDuration" class="text-sm font-mono text-emerald-300">— min</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-sm text-zinc-400">Buffer padding</dt>
+              <dd id="pBuffer" class="text-sm font-mono text-emerald-300">— min</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-sm text-zinc-400">Calendar TZ</dt>
+              <dd id="pTz" class="text-sm font-mono text-zinc-300 text-right max-w-[55%] truncate">—</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-sm text-zinc-400">Host</dt>
+              <dd id="pHost" class="text-sm font-mono text-zinc-300 text-right max-w-[55%] truncate">—</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- HEALTH BADGES -->
+        <section class="rounded-2xl bg-zinc-900/70 ring-1 ring-zinc-800 p-6">
+          <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-5">Service Badges</h2>
+          <div class="flex flex-wrap gap-2">
+            <span id="badgeCalendar" class="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 ring-1 ring-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span> Calendar
+            </span>
+            <span id="badgeLock" class="inline-flex items-center gap-1.5 rounded-full bg-zinc-800 ring-1 ring-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span> Mutex
+            </span>
+            <span id="badgeMeet" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/30 px-3 py-1.5 text-xs font-medium text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Meet
+            </span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+     *  MAINTENANCE CONSOLE CONTROLLER
+     * =================================================================== */
+
+    var term = document.getElementById('terminal');
+
+    // Monotonic in-page clock so log timestamps read cleanly without relying
+    // on a shared server epoch.
+    function stamp() {
+      var d = new Date();
+      return d.toLocaleTimeString(undefined, { hour12: false }) +
+        '.' + String(d.getMilliseconds()).padStart(3, '0');
+    }
+
+    /**
+     * Append a color-coded line to the terminal.
+     * @param {string} level  SUCCESS | INFO | WARNING | ERROR
+     * @param {string} msg
+     */
+    function logLine(level, msg) {
+      var colors = {
+        SUCCESS: 'text-emerald-400',
+        INFO: 'text-sky-400',
+        WARNING: 'text-amber-400',
+        ERROR: 'text-rose-400'
+      };
+      var cls = colors[level] || 'text-zinc-400';
+
+      var line = document.createElement('div');
+      line.className = 'whitespace-pre-wrap break-words';
+      line.innerHTML =
+        '<span class="text-zinc-600">' + stamp() + '</span> ' +
+        '<span class="' + cls + ' font-semibold">[' + level + ']</span> ' +
+        '<span class="text-zinc-300"></span>';
+      // Assign message via textContent to avoid HTML injection.
+      line.lastChild.textContent = msg;
+
+      term.appendChild(line);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearLog() {
+      term.innerHTML = '';
+      logLine('INFO', 'Console cleared.');
+    }
+
+    // ---- Overall health indicator ----
+    function setHealth(state) {
+      var dot = document.getElementById('healthDot');
+      var label = document.getElementById('healthLabel');
+      var map = {
+        ok:      { dot: 'bg-emerald-400', text: 'Status: Operational' },
+        busy:    { dot: 'bg-amber-400 animate-pulse', text: 'Status: Working…' },
+        error:   { dot: 'bg-rose-500', text: 'Status: Degraded' },
+        idle:    { dot: 'bg-zinc-600', text: 'Status: Idle' }
+      };
+      var m = map[state] || map.idle;
+      dot.className = 'w-2.5 h-2.5 rounded-full ' + m.dot;
+      label.textContent = m.text;
+    }
+
+    // ---- Service badge helper ----
+    function setBadge(id, ok, latency) {
+      var badge = document.getElementById(id);
+      var dot = badge.querySelector('span');
+      if (ok) {
+        badge.className = 'inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/30 px-3 py-1.5 text-xs font-medium text-emerald-400';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 ring-1 ring-rose-500/30 px-3 py-1.5 text-xs font-medium text-rose-400';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
+      }
+    }
+
+    // ---- Toggle switches ----
+    function flipToggle(btn, label) {
+      var isOn = btn.classList.toggle('toggle-on');
+      logLine(isOn ? 'SUCCESS' : 'WARNING', label + ' -> ' + (isOn ? 'ENABLED' : 'DISABLED'));
+    }
+
+    // ---- Diagnostic: calendar connectivity ----
+    function testCalendar(btn) {
+      setHealth('busy');
+      logLine('INFO', 'Pinging default calendar service…');
+      runServer('diagTestCalendar', [], function (res) {
+        if (res && res.ok) {
+          setBadge('badgeCalendar', true);
+          logLine('SUCCESS', 'Calendar reachable: "' + res.name + '" (' + res.timeZone + ') in ' + res.latencyMs + 'ms');
+          setHealth('ok');
+        } else {
+          setBadge('badgeCalendar', false);
+          logLine('ERROR', 'Calendar check failed: ' + ((res && res.error) || 'unknown error'));
+          setHealth('error');
+        }
+      });
+    }
+
+    // ---- Diagnostic: mutex latency ----
+    function testLock(btn) {
+      setHealth('busy');
+      logLine('INFO', 'Acquiring user lock to measure latency…');
+      runServer('diagTestLockLatency', [], function (res) {
+        if (res && res.ok) {
+          setBadge('badgeLock', true, res.latencyMs);
+          logLine('SUCCESS', 'Mutex acquired + released in ' + res.latencyMs + 'ms');
+          setHealth('ok');
+        } else {
+          setBadge('badgeLock', false);
+          logLine('WARNING', 'Lock probe: ' + ((res && res.error) || 'could not acquire lock'));
+          setHealth('error');
+        }
+      });
+    }
+
+    // ---- Diagnostic: purge cache ----
+    function purgeCache(btn) {
+      setHealth('busy');
+      logLine('INFO', 'Purging transient cache scopes…');
+      runServer('diagPurgeCache', [], function (res) {
+        if (res && res.ok) {
+          logLine('SUCCESS', 'Cache purged for scopes: [' + (res.cleared.join(', ') || 'none') + ']');
+          setHealth('ok');
+        } else {
+          logLine('ERROR', 'Cache purge failed: ' + ((res && res.error) || 'unknown error'));
+          setHealth('error');
+        }
+      });
+    }
+
+    /**
+     * Thin wrapper around google.script.run with a graceful preview fallback.
+     * @param {string} fnName
+     * @param {Array} args
+     * @param {Function} cb  receives the server result
+     */
+    function runServer(fnName, args, cb) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        var runner = google.script.run
+          .withSuccessHandler(cb)
+          .withFailureHandler(function (err) {
+            logLine('ERROR', fnName + ' threw: ' + (err && err.message ? err.message : err));
+            setHealth('error');
+          });
+        runner[fnName].apply(runner, args);
+      } else {
+        logLine('WARNING', fnName + ' unavailable in preview (not running inside Apps Script).');
+        setHealth('idle');
+      }
+    }
+
+    // ---- Boot ----
+    (function init() {
+      logLine('INFO', 'Maintenance console initialized.');
+      logLine('INFO', 'Fetching live system parameters…');
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (cfg) {
+            if (!cfg) return;
+            document.getElementById('pWindow').textContent =
+              String(cfg.workStartHour).padStart(2, '0') + ':00 — ' + String(cfg.workEndHour).padStart(2, '0') + ':00';
+            document.getElementById('pDuration').textContent = cfg.meetingDurationMinutes + ' min';
+            document.getElementById('pBuffer').textContent = cfg.bufferMinutes + ' min';
+            document.getElementById('pTz').textContent = cfg.calendarTimeZone || '—';
+            document.getElementById('pHost').textContent = cfg.hostName || '—';
+            logLine('SUCCESS', 'Parameters loaded. Working window ' + cfg.workStartHour + ':00–' + cfg.workEndHour + ':00 (' + cfg.calendarTimeZone + ')');
+            setHealth('ok');
+          })
+          .withFailureHandler(function (err) {
+            logLine('ERROR', 'Failed to load config: ' + (err && err.message ? err.message : err));
+            setHealth('error');
+          })
+          .getPublicConfig();
+      } else {
+        logLine('WARNING', 'Running outside Apps Script — live parameters unavailable in preview.');
+        setHealth('idle');
+      }
+    })();
+  </script>
+</body>
+</html>
