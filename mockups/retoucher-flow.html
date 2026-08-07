@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniMango Studio — Retoucher flow mockup</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --appbar:#f3f1ed;
+    --field:#e9e5db;
+    --cream:#f1e4b4;        /* primary pill fill */
+    --cream-soft:#f7efd3;   /* secondary fill */
+    --cream-faint:#fbf6e6;
+    --khaki:#a89c62;        /* circular add button */
+    --olive:#6b6130;        /* text on cream */
+    --olive-line:#d9cb98;   /* dashed borders */
+    --line:#e2dfd7;
+    --ink:#1f1f1f;
+    --muted:#6e6e6e;
+    --faint:#9a968c;
+    --teal:#2f8d7d;
+    --radius:12px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:#e9e7e2;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+  h1,h2,h3,h4{margin:0;font-weight:400;letter-spacing:-.01em}
+
+  /* device / app shell */
+  .app{max-width:520px;margin:0 auto;background:var(--bg);min-height:100vh;position:relative;box-shadow:0 0 40px rgba(0,0,0,.12)}
+  @media(min-width:1100px){.app{max-width:980px}}
+
+  /* ---------- app bar ---------- */
+  .appbar{position:sticky;top:0;z-index:50;background:var(--appbar);display:flex;align-items:center;gap:12px;padding:11px 14px}
+  .burger{width:24px;height:24px;display:grid;gap:4px;align-content:center;flex:none}
+  .burger i{display:block;height:2px;background:#3a3a3a;border-radius:2px}
+  .search{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:var(--field);border-radius:999px;padding:9px 14px;color:#7d7a72;font-size:13.5px}
+  .search svg{flex:none;opacity:.6}
+  .brand{text-align:center;font-size:15px;line-height:1.1;letter-spacing:.02em;color:#2a2a2a;flex:none}
+  .avatar{width:30px;height:30px;border-radius:50%;background:#e9c65f;flex:none;display:grid;place-items:center}
+  @media(max-width:560px){.brand{font-size:14px}}
+
+  /* ---------- generic bits ---------- */
+  .page{padding:16px 16px 120px}
+  .backrow{display:flex;align-items:center;gap:10px;color:#3a3a3a;padding:6px 0 10px}
+  .title{font-size:23px;line-height:1.28;letter-spacing:-.015em}
+  .titlerow{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .titlerow .title{flex:1;min-width:220px}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;background:var(--cream);color:var(--olive);border-radius:999px;padding:9px 16px;font-size:13.5px;white-space:nowrap;transition:.15s}
+  .pill:hover{filter:brightness(.97)}
+  .pill.soft{background:var(--cream-soft)}
+  .pill.outline{background:transparent;border:1px solid var(--olive-line)}
+  .pill.sm{padding:6px 12px;font-size:12.5px}
+  .pill:disabled{opacity:.5;cursor:default}
+  .pill.dark{background:var(--khaki);color:#fff}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  .chip{border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:12.5px;color:var(--ink);background:#fff;white-space:nowrap}
+  .chip b{font-weight:400;color:var(--muted);margin-right:5px}
+  .chip.tag{border-radius:999px;background:var(--cream-faint);border-color:var(--olive-line);color:var(--olive);font-size:11.5px;padding:4px 10px}
+  .chip.tag.retouch{background:var(--cream);border-color:#c9b877;font-weight:600;color:#5a5122}
+  .chip.tag.isnew{animation:pop .45s ease}
+  @keyframes pop{from{transform:scale(.7);opacity:0}}
+  .plus-chip{width:34px;height:34px;border:1px dashed var(--olive-line);border-radius:8px;display:grid;place-items:center;color:var(--olive);background:#fff}
+
+  .strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+  .strip img,.strip .tile{width:104px;height:104px;flex:none;border-radius:10px;object-fit:cover;background:#f4f4f2;border:1px solid var(--line)}
+  .tile{display:grid;place-items:center;background:var(--cream-soft);border:1.5px dashed var(--olive-line);color:var(--olive);font-size:30px;font-weight:300;cursor:pointer}
+  .tile:hover{background:var(--cream)}
+  .strip img{cursor:pointer;transition:.15s}
+  .strip img:hover{border-color:var(--olive-line)}
+
+  .sec{margin-top:26px}
+  .sechead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .sechead h3{font-size:19px}
+  .note{color:var(--muted);font-size:13px;margin:0 0 12px}
+  hr{border:none;border-top:1px solid var(--line);margin:26px 0}
+
+  /* ---------- retouch detail cards ---------- */
+  .detail{width:118px;flex:none;cursor:default}
+  .detail .crop-thumb{width:118px;height:88px;border-radius:10px;border:1px solid var(--olive-line);background-repeat:no-repeat;background-color:#fff;position:relative}
+  .detail .dname{font-size:12px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .detail .dsub{font-size:10.5px;color:var(--faint)}
+  .detail .del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;color:var(--muted);opacity:0;transition:.15s}
+  .detail:hover .del{opacity:1}
+  .detail .crop-thumb.tall{height:88px}
+  .tile.detail-tile{width:118px;height:88px;border-radius:10px;font-size:24px;flex-direction:column}
+  .tile.detail-tile small{font-size:11px;font-weight:400}
+
+  /* ---------- generation cards ---------- */
+  .gencards{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;align-items:stretch}
+  .gencard{width:300px;flex:none;border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:#fff;display:flex;flex-direction:column;gap:12px}
+  .gencard .toprow{display:flex;gap:8px;justify-content:center}
+  textarea{width:100%;min-height:88px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:10px 11px;font:inherit;font-size:14px;color:var(--ink);background:#fff}
+  textarea::placeholder{color:#a5a29a}
+  textarea:focus{outline:none;border-color:var(--olive-line)}
+  .settings{border-top:1px solid var(--line);padding-top:10px}
+  .settings .lab{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+  .fieldlab{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+  .sel{display:flex;align-items:center;gap:7px;background:var(--cream-soft);border-radius:999px;padding:7px 13px;font-size:12.5px;color:var(--olive);width:100%}
+  .sel .car{font-size:9px;opacity:.7}
+  .addcard{width:300px;flex:none;border:1px solid var(--olive-line);border-radius:var(--radius);display:grid;place-items:center;min-height:320px;background:#fff}
+  .addcard .circ{width:74px;height:74px;border-radius:50%;background:var(--khaki);color:#fff;font-size:36px;font-weight:300;display:grid;place-items:center}
+
+  /* ---------- generated results grid ---------- */
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .rcard{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff;cursor:pointer;transition:.15s}
+  .rcard:hover{border-color:var(--olive-line);transform:translateY(-1px)}
+  .rcard img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#faf9f7}
+  .rcard .rm{padding:8px 9px;display:flex;flex-wrap:wrap;gap:4px}
+  .rcard .rid{width:100%;font-size:11.5px;color:var(--muted);margin-bottom:2px}
+  .rcard.fresh{border-color:#c9b877;box-shadow:0 0 0 3px rgba(241,228,180,.55)}
+
+  /* ---------- bottom bar ---------- */
+  .bottombar{position:sticky;bottom:0;background:#f7f6f2;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:12px 16px;font-size:13px;color:var(--muted);z-index:40}
+
+  /* ---------- modal / detail view ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(60,58,52,.55);z-index:60;display:none;overflow:auto;padding:22px 12px}
+  .scrim.on{display:block}
+  .sheet{max-width:960px;margin:0 auto;background:#fff;border-radius:18px;overflow:hidden;min-height:70vh}
+  .sheethead{background:#f7f6f2;border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+  .sheetbody{display:grid;grid-template-columns:300px 1fr;gap:24px;padding:20px}
+  @media(max-width:760px){.sheetbody{grid-template-columns:1fr;padding:14px}}
+
+  .imgpane{background:var(--cream);border-radius:14px;padding:0;overflow:hidden;position:relative;align-self:start}
+  .stage{position:relative;overflow:hidden;touch-action:none;user-select:none;background:#fff}
+  .stage img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;pointer-events:none}
+  .stage.arm{cursor:crosshair}
+  .stage.arm::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px var(--khaki);pointer-events:none;animation:blink 1.8s ease-in-out infinite}
+  @keyframes blink{50%{box-shadow:inset 0 0 0 2px rgba(168,156,98,.3)}}
+  .crop{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 9999px rgba(40,38,32,.5);display:none}
+  .crop.on{display:block}
+  .crop i{position:absolute;width:9px;height:9px;background:#fff;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+  .crop i:nth-of-type(1){left:-5px;top:-5px}.crop i:nth-of-type(2){right:-5px;top:-5px}
+  .crop i:nth-of-type(3){left:-5px;bottom:-5px}.crop i:nth-of-type(4){right:-5px;bottom:-5px}
+  .crop .dims{position:absolute;left:0;bottom:-24px;font-size:10.5px;color:#fff;background:rgba(40,38,32,.75);padding:2px 7px;border-radius:5px;white-space:nowrap}
+  .stagetip{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(40,38,32,.8);color:#fff;font-size:11.5px;padding:5px 11px;border-radius:999px;pointer-events:none;white-space:nowrap}
+  .imgpane .cap{padding:9px 12px;font-size:11.5px;color:var(--olive);display:flex;align-items:center;gap:8px}
+
+  .meta h4{font-size:14px;color:var(--muted);margin-bottom:12px}
+  .meta .lbl{font-size:14px;margin-top:14px}
+  .meta .val{font-size:14px;color:#2b2b2b;margin-top:4px}
+  .meta .subtle{color:var(--muted);font-size:12.5px}
+  .metarow{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+  .metarow .fieldlab{margin-bottom:5px}
+
+  /* retouch popover */
+  .pop{position:absolute;z-index:20;width:272px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.22);display:none;overflow:hidden}
+  .pop.on{display:block;animation:pop .16s ease}
+  .pop .ph{padding:10px 13px;border-bottom:1px solid var(--line);background:var(--cream-faint);display:flex;align-items:center;gap:8px}
+  .pop .ph h4{font-size:13.5px;color:var(--olive)}
+  .pop .ph .d{margin-left:auto;font-size:10.5px;color:var(--faint)}
+  .pop .pb{padding:12px;display:flex;flex-direction:column;gap:11px}
+  .pop textarea{min-height:62px;font-size:13px}
+  .picker{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px}
+  .pick{flex:none;width:74px;text-align:center;cursor:pointer}
+  .pick .crop-thumb{width:74px;height:56px;border-radius:8px;border:1px solid var(--line);background-repeat:no-repeat;background-color:#fff;transition:.15s}
+  .pick .none{width:74px;height:56px;border-radius:8px;border:1px dashed var(--olive-line);display:grid;place-items:center;color:var(--faint);font-size:11px}
+  .pick span{display:block;font-size:10px;color:var(--faint);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pick[data-sel="1"] .crop-thumb,.pick[data-sel="1"] .none{border-color:var(--khaki);box-shadow:0 0 0 2px rgba(168,156,98,.28)}
+  .pick[data-sel="1"] span{color:var(--olive)}
+  .pop .pf{display:flex;gap:8px;padding:11px 12px;border-top:1px solid var(--line);background:#fbfaf7}
+  .pop .pf .pill{flex:1;justify-content:center}
+
+  /* on narrow screens the popup becomes a bottom sheet so it never covers the zone */
+  @media(max-width:760px){
+    .pop{position:fixed;left:0 !important;right:0;top:auto !important;bottom:0;width:100%;
+         border-radius:16px 16px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25);z-index:70}
+    .pop.on{animation:sheetup .2s ease}
+    .pop .picker{padding-bottom:2px}
+  }
+  @keyframes sheetup{from{transform:translateY(30px);opacity:0}}
+
+  .loading{position:absolute;inset:0;background:rgba(255,255,255,.86);display:none;place-items:center;align-content:center;gap:10px;z-index:15}
+  .loading.on{display:grid}
+  .spin{width:26px;height:26px;border:2.5px solid var(--cream);border-top-color:var(--khaki);border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .loading span{font-size:12.5px;color:var(--olive)}
+
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .ba figure{margin:0}
+  .ba figcaption{font-size:11.5px;color:var(--muted);margin-bottom:6px;display:flex;gap:6px;align-items:center}
+  .ba .fr{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .ba img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+  .zonebox{position:absolute;border:1.5px dashed #d8a13a;border-radius:3px;box-shadow:0 0 0 9999px rgba(255,255,255,.35)}
+
+  .hidden{display:none !important}
+  .spec{margin:26px 16px 40px;max-width:940px;border:1px solid var(--line);border-radius:var(--radius);background:#fbfaf7;padding:16px}
+  .spec h4{font-size:14px;margin-bottom:10px}
+  .spec ol{margin:0;padding-left:18px;color:var(--muted);font-size:13px}
+  .spec li{margin-bottom:6px}
+  .spec b{color:var(--ink);font-weight:600}
+  @media(min-width:1100px){.spec{margin-left:auto;margin-right:auto}}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= APP BAR ================= -->
+  <div class="appbar">
+    <button class="burger" aria-label="Menu"><i></i><i></i><i></i></button>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      Search products by asin/sku/title
+    </div>
+    <div class="brand">MINI<br>MANGO</div>
+    <div class="avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="#7a6a1f"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg></div>
+  </div>
+
+  <!-- ================= PRODUCT PAGE ================= -->
+  <div class="page" id="product">
+    <div class="backrow">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+    </div>
+
+    <div class="titlerow">
+      <h1 class="title">17"x17"x4" Kitchen Chair Cushions Set of 4 with Non-Slip Ties, Light Gray.</h1>
+      <div style="display:flex;gap:8px">
+        <button class="pill">View images</button>
+        <button class="pill soft">Edit product data</button>
+      </div>
+    </div>
+
+    <div class="chips">
+      <span class="chip"><b>Brand</b>EVAsponge</span>
+      <span class="chip"><b>Category</b>Chair Pads</span>
+      <span class="chip">SKU</span>
+      <span class="chip"><b>ASIN</b>B0H877KWTS</span>
+      <span class="plus-chip">+</span>
+    </div>
+
+    <!-- base images -->
+    <div class="strip" id="baseStrip"></div>
+
+    <!-- ============ NEW: RETOUCH DETAILS ============ -->
+    <div class="sec">
+      <div class="sechead">
+        <h3>Retouch details</h3>
+        <button class="pill outline sm" id="openCrop">+ Crop from image</button>
+      </div>
+      <p class="note">Crop the parts the model keeps getting wrong — a logo, a hang tag, badge text or a pattern. Details live next to the base images and can be attached to any retouch.</p>
+      <div class="strip" id="detailStrip"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sechead"><h3>Attributes</h3><button class="pill outline sm">+ Add attribute</button></div>
+      <p class="note">No attributes yet. Add one to describe this product.</p>
+    </div>
+
+    <hr>
+
+    <h2 class="title" style="font-size:27px;margin-bottom:14px">Generate images</h2>
+    <div class="gencards">
+      <div class="gencard">
+        <div class="toprow">
+          <button class="pill sm">Apply Template</button>
+          <button class="pill sm" style="padding:6px 10px">▾</button>
+        </div>
+        <textarea placeholder="Your idea goes here">create a white studio image for this product</textarea>
+        <div class="tile" style="width:104px;height:104px;border-radius:10px">+</div>
+        <div class="settings">
+          <div class="lab">Settings</div>
+          <div class="grid2">
+            <div><div class="fieldlab">Ratio</div><div class="sel"><span class="car">▾</span>1:1</div></div>
+            <div><div class="fieldlab">Model</div><div class="sel"><span class="car">▾</span>Nano Banana 2</div></div>
+            <div><div class="fieldlab">Quality</div><div class="sel"><span class="car">▾</span>4K</div></div>
+            <div><div class="fieldlab">Variations</div><div class="sel"><span class="car">▾</span>3</div></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <button class="pill sm">Duplicate</button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c7a72" stroke-width="1.7"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+        </div>
+      </div>
+      <div class="addcard"><div class="circ">+</div></div>
+    </div>
+
+    <!-- generated results -->
+    <div class="sec">
+      <div class="sechead">
+        <h3>Generated images</h3>
+        <span class="chip tag" id="filterTag" style="cursor:pointer">filter: retouch</span>
+      </div>
+      <p class="note">Tap an image to see how it was generated, reprompt it — or retouch a zone.</p>
+      <div class="results" id="results"></div>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <span id="genCount">This will generate 3 images</span>
+    <button class="pill">Generate</button>
+  </div>
+</div>
+
+<!-- ================= IMAGE DETAIL SHEET ================= -->
+<div class="scrim" id="detailSheet">
+  <div class="sheet">
+    <div class="sheethead">
+      <button class="pill soft sm" id="sheetBack">← Back</button>
+      <span class="subtle" style="color:var(--muted);font-size:12.5px" id="sheetId"></span>
+    </div>
+    <div class="sheetbody">
+
+      <!-- left: image + crop stage -->
+      <div>
+        <div class="imgpane">
+          <div class="stage" id="stage">
+            <img id="stageImg" alt="Generated image">
+            <div class="crop" id="crop"><i></i><i></i><i></i><i></i><div class="dims" id="cropDims"></div></div>
+            <div class="stagetip hidden" id="stageTip">Drag over the area you want to retouch</div>
+            <div class="loading" id="loading"><div class="spin"></div><span id="loadTxt">Generating retouch…</span></div>
+
+            <!-- small retouch popup -->
+            <div class="pop" id="pop">
+              <div class="ph"><h4>Retouch this zone</h4><span class="d" id="popDims"></span></div>
+              <div class="pb">
+                <div>
+                  <div class="fieldlab">Prompt</div>
+                  <textarea id="popPrompt" placeholder="e.g. redraw the hang tag with the exact brand logo, keep the fabric texture and lighting"></textarea>
+                </div>
+                <div>
+                  <div class="fieldlab">Retouch image</div>
+                  <div class="picker" id="picker"></div>
+                </div>
+              </div>
+              <div class="pf">
+                <button class="pill soft sm" id="popCancel">Cancel</button>
+                <button class="pill sm" id="popGo">Retouch</button>
+              </div>
+            </div>
+          </div>
+          <div class="cap" id="stageCap">Nano Banana 2 · 1K · 1:1</div>
+        </div>
+      </div>
+
+      <!-- right: meta -->
+      <div class="meta">
+        <h4>How this image was generated</h4>
+        <div class="lbl">Prompt</div>
+        <div class="val" id="mPrompt">create a white studio image for this product</div>
+        <div class="lbl">Setting used:</div>
+        <div class="val">N/A <span class="subtle" style="margin-left:6px">Edit Template</span></div>
+        <div class="metarow">
+          <div><div class="fieldlab">Ratio</div><span class="chip tag">1:1</span></div>
+          <div><div class="fieldlab">Quality</div><span class="chip tag">1K</span></div>
+          <div><div class="fieldlab">Model</div><span class="chip tag">Nano Banana 2</span></div>
+        </div>
+        <div style="margin-top:14px"><div class="fieldlab">Tags</div><div class="chips" id="mTags" style="margin:6px 0 0"></div></div>
+
+        <hr>
+
+        <!-- ============ NEW: RETOUCH SECTION ============ -->
+        <div id="retouchBlock">
+          <div class="lbl" style="margin-top:0">Retouch this image</div>
+          <p class="note" style="margin-top:6px">Fix one zone instead of regenerating the whole image. Crop the area, describe the fix, and attach a retouch detail so the model copies it exactly.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="pill" id="btnRetouch">✦ Retouch a zone</button>
+            <button class="pill soft sm" id="btnAutoZone">Select the hang tag</button>
+          </div>
+        </div>
+
+        <!-- result block -->
+        <div id="resultBlock" class="hidden">
+          <div class="lbl" style="margin-top:0">Retouch result</div>
+          <div class="ba">
+            <figure>
+              <figcaption>parent</figcaption>
+              <div class="fr"><img id="beforeImg" alt="Before"><div class="zonebox" id="zoneBox"></div></div>
+            </figure>
+            <figure>
+              <figcaption><span class="chip tag retouch">retouch</span></figcaption>
+              <div class="fr"><img id="afterImg" alt="After"></div>
+            </figure>
+          </div>
+          <div class="val subtle" style="margin-top:10px" id="resultLineage"></div>
+          <div class="fieldlab" style="margin-top:12px">Tags on the new image</div>
+          <div class="chips" id="resultTags" style="margin:6px 0 0"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <button class="pill" id="btnKeep">Add to product</button>
+            <button class="pill soft" id="btnAgain">✦ Retouch again</button>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="lbl" style="margin-top:0">Reprompt this image</div>
+        <div class="metarow" style="margin-top:10px">
+          <div><div class="fieldlab">Model</div><div class="sel" style="width:auto">Nano Banana 2 <span class="car">▾</span></div></div>
+          <div><div class="fieldlab">Quality</div><div class="sel" style="width:auto">1K <span class="car">▾</span></div></div>
+        </div>
+        <textarea style="margin-top:12px" placeholder="RePrompt"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="pill soft" disabled>Reprompt</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CROP-A-DETAIL SHEET ================= -->
+<div class="scrim" id="cropSheet">
+  <div class="sheet" style="max-width:720px">
+    <div class="sheethead">
+      <button class="pill soft sm" id="cropBack">← Back</button>
+      <span style="color:var(--muted);font-size:12.5px">New retouch detail</span>
+    </div>
+    <div class="sheetbody" style="grid-template-columns:1fr">
+      <div>
+        <p class="note">Pick a base image, then drag a box around the element you want kept pixel-accurate.</p>
+        <div class="strip" id="cropPicker" style="margin-bottom:14px"></div>
+        <div class="imgpane" style="max-width:420px">
+          <div class="stage arm" id="cstage">
+            <img id="cstageImg" alt="Base image">
+            <div class="crop" id="ccrop"><i></i><i></i><i></i><i></i><div class="dims" id="ccropDims"></div></div>
+            <div class="stagetip" id="cstageTip">Drag to crop a detail</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+          <div>
+            <div class="fieldlab">Detail name</div>
+            <input id="cropName" value="Brand hang tag" style="border:1px solid var(--line);border-radius:8px;padding:8px 11px;font:inherit;font-size:14px;width:220px">
+          </div>
+          <button class="pill" id="cropSave" style="align-self:flex-end" disabled>Save retouch detail</button>
+          <button class="pill soft sm" id="cropSuggest" style="align-self:flex-end">Suggest the tag area</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec">
+  <h4>Notes for engineering</h4>
+  <ol>
+    <li><b>RetouchDetail</b> = { id, product_id, source_image_id, rect(x,y,w,h as 0–1 fractions), name, thumb }. Stored on the product, so it is reusable across every generation and every batch.</li>
+    <li>Crops are kept as <b>fractions of the source image</b>, never pixels — the same detail then works against 1K and 4K outputs alike.</li>
+    <li>A retouch job carries: parent_image_id, zone rect, prompt, detail_id (nullable). The zone is padded before it goes to the edit model so it can blend the seam.</li>
+    <li>Output inherits <code>parent.tags</code> and appends <b>retouch</b>, and stores <code>parent_id</code> — so it stays inside the same product/batch filters and the before/after diff is free.</li>
+    <li>Retouches chain: a retouched image is a valid parent (<code>_r1 → _r2</code>). Keep the <b>retouch</b> tag once and track depth separately.</li>
+    <li>The popup anchors to the drawn zone and is clamped inside the image; below 760px it becomes a bottom sheet.</li>
+    <li>Prompt-only retouch (no detail attached) must stay valid — the detail picker has a <b>none</b> option.</li>
+  </ol>
+  <p class="note" style="margin:10px 0 0">Static mockup — generation is simulated, no backend calls. Placeholder artwork stands in for real product photos.</p>
+</div>
+
+<script>
+/* ============================================================
+   Placeholder artwork — grey chair cushions with a branded
+   hang tag. The tag is what the generator mangles, and what
+   the Retoucher fixes.
+=============================================================*/
+function art({scene='stack', garbled=false}={}){
+  const warp = garbled ? ' filter="url(#warp)"' : '';
+  const tagText = garbled ? 'MIMI' : 'MINI';
+  const tagText2 = garbled ? 'MANGD' : 'MANGO';
+
+  const cushion = (x,y,w,h,f1,f2) => `
+    <g>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h*0.30}" fill="${f1}"/>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h*0.30}" fill="none" stroke="${f2}" stroke-width="3"/>
+      <ellipse cx="${x+w*0.5}" cy="${y+h*0.5}" rx="${w*0.06}" ry="${h*0.09}" fill="${f2}" opacity=".55"/>
+      <ellipse cx="${x+w*0.26}" cy="${y+h*0.5}" rx="${w*0.05}" ry="${h*0.08}" fill="${f2}" opacity=".4"/>
+      <ellipse cx="${x+w*0.74}" cy="${y+h*0.5}" rx="${w*0.05}" ry="${h*0.08}" fill="${f2}" opacity=".4"/>
+    </g>`;
+
+  /* branded hang tag — the retouch detail */
+  const tag = (cx,cy,s=1) => `
+    <g transform="translate(${cx},${cy}) scale(${s})">
+      <path d="M0 -78 q26 26 0 42" fill="none" stroke="#cfcfcf" stroke-width="4"/>
+      <rect x="-46" y="-38" width="92" height="120" rx="12" fill="#2f8d7d"/>
+      <circle cx="0" cy="-26" r="6" fill="#f2f2f2"/>
+      <g${warp} fill="#ffffff" font-family="Georgia,serif" text-anchor="middle">
+        <text x="0" y="12" font-size="26" letter-spacing="1">${tagText}</text>
+        <text x="0" y="42" font-size="21" letter-spacing="1">${tagText2}</text>
+      </g>
+      <line x1="-30" y1="56" x2="30" y2="56" stroke="#ffffff" stroke-opacity=".6" stroke-width="2"/>
+    </g>`;
+
+  const scenes = {
+    /* base 1 — pack shot, carries the readable tag */
+    stack: `<rect width="1000" height="1000" fill="#ffffff"/>
+      ${cushion(180,620,640,190,'#d8d9dd','#bcbec4')}
+      ${cushion(200,470,600,180,'#dedfe3','#c2c4ca')}
+      ${cushion(220,320,560,180,'#e4e5e9','#c7c9cf')}
+      ${tag(700,300,1)}
+      <ellipse cx="500" cy="836" rx="330" ry="26" fill="#000" opacity=".07"/>`,
+
+    /* base 2 — dimension infographic */
+    dims: `<rect width="1000" height="1000" fill="#f7f7f5"/>
+      <text x="500" y="120" text-anchor="middle" font-family="Helvetica" font-size="42" fill="#3a3a3a">Product Dimensions</text>
+      ${cushion(280,380,440,240,'#dcdde1','#c0c2c8')}
+      <g stroke="#8a8a8a" stroke-width="3" fill="none">
+        <path d="M280 690 h440"/><path d="M280 676 v28"/><path d="M720 676 v28"/>
+        <path d="M770 380 v240"/><path d="M756 380 h28"/><path d="M756 620 h28"/>
+      </g>
+      <text x="500" y="740" text-anchor="middle" font-family="Helvetica" font-size="34" fill="#555">17"</text>
+      <text x="812" y="510" font-family="Helvetica" font-size="34" fill="#555">4"</text>
+      <rect x="180" y="800" width="640" height="120" rx="12" fill="#eceae3"/>
+      <text x="210" y="845" font-family="Helvetica" font-size="26" fill="#5c5c5c">Warm Tip</text>
+      <text x="210" y="885" font-family="Helvetica" font-size="21" fill="#7a7a7a">Double-check your chair dimensions before buying.</text>`,
+
+    /* base 3 — non-slip bottom close-up */
+    grip: `<rect width="1000" height="1000" fill="#eeeeec"/>
+      ${cushion(120,240,760,420,'#e2e3e7','#c6c8ce')}
+      <g fill="#9aa0a8" opacity=".8">
+        ${Array.from({length:5},(_,r)=>Array.from({length:9},(_,c)=>
+          `<circle cx="${190+c*78}" cy="${330+r*62}" r="9"/>`).join('')).join('')}
+      </g>
+      <text x="500" y="800" text-anchor="middle" font-family="Helvetica" font-size="36" fill="#4a4a4a">Non-Slip Bottom</text>
+      <text x="500" y="850" text-anchor="middle" font-family="Helvetica" font-size="23" fill="#7c7c7c">Keeps the pad in place on any seat</text>`,
+
+    /* base 4 — cushion on a wooden chair */
+    chair: `<rect width="1000" height="1000" fill="#f0ece4"/>
+      <g fill="#b98a56">
+        <rect x="300" y="150" width="46" height="640" rx="16"/>
+        <rect x="654" y="150" width="46" height="640" rx="16"/>
+        <rect x="300" y="190" width="400" height="34" rx="14"/>
+        <rect x="300" y="280" width="400" height="34" rx="14"/>
+        <rect x="270" y="520" width="460" height="40" rx="16"/>
+        <rect x="300" y="560" width="34" height="300" rx="12"/>
+        <rect x="666" y="560" width="34" height="300" rx="12"/>
+      </g>
+      ${cushion(286,468,428,84,'#dcdde1','#c0c2c8')}
+      ${tag(742,470,.72)}
+      <ellipse cx="500" cy="880" rx="290" ry="22" fill="#000" opacity=".08"/>`,
+
+    /* base 5 — lifestyle */
+    sofa: `<rect width="1000" height="1000" fill="#efeae2"/>
+      <rect x="0" y="640" width="1000" height="360" fill="#e3dbcf"/>
+      <rect x="120" y="380" width="760" height="300" rx="34" fill="#f5f3ef"/>
+      ${cushion(210,430,300,170,'#dcdde1','#c0c2c8')}
+      ${cushion(520,430,300,170,'#d5d6da','#bbbdc3')}
+      <circle cx="880" cy="300" r="70" fill="#cfd8c8"/>
+      <rect x="860" y="360" width="40" height="120" rx="10" fill="#b08a5f"/>`,
+
+    /* generated — kitchen scene, tag comes out garbled */
+    kitchen: `<rect width="1000" height="1000" fill="#f4efe6"/>
+      <rect x="0" y="700" width="1000" height="300" fill="#e6dccb"/>
+      <rect x="0" y="690" width="1000" height="16" fill="#d3c6b1"/>
+      <g fill="#c08f57">
+        <rect x="320" y="120" width="42" height="620" rx="16"/>
+        <rect x="640" y="120" width="42" height="620" rx="16"/>
+        <rect x="320" y="170" width="362" height="30" rx="12"/>
+        <rect x="320" y="250" width="362" height="30" rx="12"/>
+        <rect x="292" y="470" width="418" height="38" rx="15"/>
+        <rect x="322" y="508" width="32" height="270" rx="12"/>
+        <rect x="648" y="508" width="32" height="270" rx="12"/>
+      </g>
+      ${cushion(306,420,392,80,'#dcdde1','#c0c2c8')}
+      ${tag(724,424,.66)}
+      <circle cx="130" cy="600" r="60" fill="#cdd8c6"/>
+      <rect x="106" y="650" width="48" height="90" rx="10" fill="#a97e52"/>
+      <ellipse cx="500" cy="792" rx="250" ry="20" fill="#000" opacity=".08"/>`,
+
+    /* generated — white studio, tag garbled */
+    studio: `<rect width="1000" height="1000" fill="#fbfbfb"/>
+      <path d="M0 720 Q500 660 1000 720 L1000 1000 L0 1000Z" fill="#f1f1f1"/>
+      ${cushion(230,430,540,210,'#dcdde1','#c0c2c8')}
+      ${tag(792,436,.78)}
+      <ellipse cx="500" cy="680" rx="290" ry="26" fill="#000" opacity=".07"/>`,
+
+    /* generated — grey lifestyle bench, tag garbled */
+    bench: `<rect width="1000" height="1000" fill="#eceae6"/>
+      <rect x="0" y="660" width="1000" height="340" fill="#ddd8cf"/>
+      <rect x="120" y="560" width="760" height="110" rx="18" fill="#c9a173"/>
+      <rect x="170" y="670" width="34" height="180" rx="10" fill="#b08a5f"/>
+      <rect x="796" y="670" width="34" height="180" rx="10" fill="#b08a5f"/>
+      ${cushion(230,470,300,100,'#dcdde1','#c0c2c8')}
+      ${cushion(560,470,300,100,'#d5d6da','#bbbdc3')}
+      ${tag(548,474,.62)}
+      <rect x="60" y="300" width="180" height="240" rx="12" fill="#e7e2d8"/>`
+  };
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+    <defs><filter id="warp">
+      <feTurbulence type="turbulence" baseFrequency="0.09" numOctaves="2" seed="5" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="11" xChannelSelector="R" yChannelSelector="G"/>
+    </filter></defs>
+    ${scenes[scene]}
+  </svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+
+/* ---------------- data ---------------- */
+const BASE_IMAGES = [
+  {id:'img_1', name:'Main pack shot', src:art({scene:'stack'}),  tagZone:{x:.62,y:.22,w:.16,h:.16}},
+  {id:'img_2', name:'Dimensions',     src:art({scene:'dims'})},
+  {id:'img_3', name:'Non-slip bottom',src:art({scene:'grip'})},
+  {id:'img_4', name:'On a chair',     src:art({scene:'chair'}),  tagZone:{x:.68,y:.40,w:.12,h:.12}},
+  {id:'img_5', name:'Lifestyle',      src:art({scene:'sofa'})}
+];
+
+const PRODUCT_TAGS = ['product:B0H877KWTS','brand:EVAsponge','batch:0428'];
+
+let IMAGES = [
+  {id:'gen_0428_a', src:art({scene:'kitchen',garbled:true}), fixed:art({scene:'kitchen'}),
+   prompt:'kitchen chair with the cushion, natural morning light', tags:[...PRODUCT_TAGS,'scene:kitchen'],
+   zone:{x:.66,y:.36,w:.14,h:.13}},
+  {id:'gen_0428_b', src:art({scene:'studio',garbled:true}), fixed:art({scene:'studio'}),
+   prompt:'create a white studio image for this product', tags:[...PRODUCT_TAGS,'scene:studio'],
+   zone:{x:.72,y:.38,w:.16,h:.15}},
+  {id:'gen_0428_c', src:art({scene:'bench',garbled:true}), fixed:art({scene:'bench'}),
+   prompt:'two cushions on a wooden bench, warm interior', tags:[...PRODUCT_TAGS,'scene:bench'],
+   zone:{x:.48,y:.40,w:.12,h:.12}}
+];
+
+const state = {
+  details:[{id:'rd_1', name:'Brand hang tag', src:BASE_IMAGES[0].src, rect:{...BASE_IMAGES[0].tagZone}}],
+  detailId:'rd_1',
+  current:null,      // image open in the sheet
+  zone:null,
+  prompt:'',
+  cropSource:BASE_IMAGES[0],
+  cropRect:null,
+  result:null
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const px = r => `${Math.round(r.w*1000)} × ${Math.round(r.h*1000)} px`;
+function thumbStyle(el, src, r){
+  el.style.backgroundImage = `url("${src}")`;
+  el.style.backgroundSize = `${100/r.w}% ${100/r.h}%`;
+  el.style.backgroundPosition = `${r.w<1 ? (r.x/(1-r.w))*100 : 0}% ${r.h<1 ? (r.y/(1-r.h))*100 : 0}%`;
+}
+function placeRect(box, r){
+  box.style.left=(r.x*100)+'%'; box.style.top=(r.y*100)+'%';
+  box.style.width=(r.w*100)+'%'; box.style.height=(r.h*100)+'%';
+}
+function makeCropper(stage, box, dims, onDone){
+  let start=null;
+  const pt = e => {
+    const b = stage.getBoundingClientRect();
+    return {x:Math.min(Math.max((e.clientX-b.left)/b.width,0),1),
+            y:Math.min(Math.max((e.clientY-b.top)/b.height,0),1)};
+  };
+  const draw = (a,b) => {
+    const r={x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};
+    placeRect(box,r); if(dims) dims.textContent = px(r); return r;
+  };
+  stage.addEventListener('pointerdown', e=>{
+    /* never start a crop from inside the popup or the loading veil —
+       pointer capture would otherwise steal the button's click */
+    if(e.target.closest('.pop, .loading')) return;
+    if(!stage.classList.contains('arm')) return;
+    stage.setPointerCapture(e.pointerId); start=pt(e);
+    box.classList.add('on'); draw(start,start);
+  });
+  stage.addEventListener('pointermove', e=>{ if(start) draw(start,pt(e)); });
+  stage.addEventListener('pointerup', e=>{
+    if(!start) return;
+    const r = draw(start, pt(e)); start=null;
+    if(r.w<.02||r.h<.02){ box.classList.remove('on'); onDone(null); } else onDone(r);
+  });
+}
+
+/* ---------------- product page render ---------------- */
+function renderBase(){
+  const s = $('#baseStrip'); s.innerHTML='';
+  BASE_IMAGES.forEach(b=>{
+    const im=document.createElement('img'); im.src=b.src; im.alt=b.name; im.title=b.name+' — click to crop a retouch detail';
+    im.onclick=()=>openCrop(b);
+    s.appendChild(im);
+  });
+  const t=document.createElement('div'); t.className='tile'; t.textContent='+';
+  s.appendChild(t);
+}
+function renderDetails(){
+  const s=$('#detailStrip'); s.innerHTML='';
+  state.details.forEach(d=>{
+    const el=document.createElement('div'); el.className='detail';
+    el.innerHTML=`<div class="crop-thumb"><button class="del" title="Remove">✕</button></div>
+      <div class="dname">${d.name}</div><div class="dsub">${d.id} · ${px(d.rect)}</div>`;
+    thumbStyle(el.querySelector('.crop-thumb'), d.src, d.rect);
+    el.querySelector('.del').onclick=()=>{
+      state.details=state.details.filter(x=>x.id!==d.id);
+      if(state.detailId===d.id) state.detailId=state.details[0]?.id ?? null;
+      renderDetails(); renderPicker();
+    };
+    s.appendChild(el);
+  });
+  const t=document.createElement('button');
+  t.className='tile detail-tile'; t.innerHTML='+<small>crop detail</small>';
+  t.onclick=()=>openCrop(BASE_IMAGES[0]);
+  s.appendChild(t);
+  if(!state.details.length){
+    const p=document.createElement('div'); p.className='note';
+    p.style.cssText='align-self:center;margin:0 0 0 4px';
+    p.textContent='No retouch details yet.';
+    s.appendChild(p);
+  }
+}
+function renderResults(filter){
+  const g=$('#results'); g.innerHTML='';
+  IMAGES.filter(i=>!filter||i.tags.includes('retouch')).forEach(im=>{
+    const c=document.createElement('div');
+    c.className='rcard'+(im.fresh?' fresh':'');
+    c.innerHTML=`<img src="${im.src}" alt="${im.id}">
+      <div class="rm"><div class="rid">${im.id}</div>
+      ${im.tags.filter(t=>!t.startsWith('product')&&!t.startsWith('brand')).map(t=>`<span class="chip tag ${t==='retouch'?'retouch':''}">${t}</span>`).join('')}</div>`;
+    c.onclick=()=>openImage(im);
+    g.appendChild(c);
+  });
+}
+let filterOn=false;
+$('#filterTag').onclick=()=>{
+  filterOn=!filterOn;
+  $('#filterTag').style.background = filterOn?'var(--cream)':'var(--cream-faint)';
+  $('#filterTag').textContent = filterOn?'filter: retouch ✕':'filter: retouch';
+  renderResults(filterOn);
+};
+
+/* ---------------- crop-a-detail sheet ---------------- */
+const cstage=$('#cstage'), ccrop=$('#ccrop');
+function openCrop(src){
+  state.cropSource=src; state.cropRect=null;
+  $('#cstageImg').src=src.src;
+  ccrop.classList.remove('on');
+  $('#cstageTip').classList.remove('hidden');
+  $('#cropSave').disabled=true;
+  $('#cropSuggest').style.display = src.tagZone ? '' : 'none';
+  renderCropPicker();
+  $('#cropSheet').classList.add('on');
+}
+function renderCropPicker(){
+  const p=$('#cropPicker'); p.innerHTML='';
+  BASE_IMAGES.forEach(b=>{
+    const im=document.createElement('img'); im.src=b.src; im.alt=b.name;
+    im.style.cssText='width:76px;height:76px';
+    if(b.id===state.cropSource.id) im.style.borderColor='var(--khaki)', im.style.boxShadow='0 0 0 2px rgba(168,156,98,.3)';
+    im.onclick=()=>openCrop(b);
+    p.appendChild(im);
+  });
+}
+makeCropper(cstage, ccrop, $('#ccropDims'), r=>{
+  state.cropRect=r; $('#cropSave').disabled=!r;
+  $('#cstageTip').classList.toggle('hidden', !!r);
+});
+$('#cropSuggest').onclick=()=>{
+  const r=state.cropSource.tagZone; if(!r) return;
+  ccrop.classList.add('on'); placeRect(ccrop,r); $('#ccropDims').textContent=px(r);
+  state.cropRect={...r}; $('#cropSave').disabled=false; $('#cstageTip').classList.add('hidden');
+};
+$('#cropSave').onclick=()=>{
+  const n=state.details.length+1;
+  const d={id:'rd_'+n, name:$('#cropName').value.trim()||('Detail '+n),
+           src:state.cropSource.src, rect:{...state.cropRect}};
+  state.details.push(d); state.detailId=d.id;
+  $('#cropSheet').classList.remove('on');
+  renderDetails(); renderPicker();
+};
+$('#cropBack').onclick=()=>$('#cropSheet').classList.remove('on');
+$('#openCrop').onclick=()=>openCrop(state.cropSource||BASE_IMAGES[0]);
+/* click the backdrop to close either sheet */
+document.querySelectorAll('.scrim').forEach(sc=>{
+  sc.addEventListener('pointerdown', e=>{ if(e.target===sc) sc.classList.remove('on'); });
+});
+
+/* ---------------- image detail sheet ---------------- */
+const stage=$('#stage'), crop=$('#crop'), pop=$('#pop');
+function openImage(im){
+  state.current=im; state.zone=null; state.result=null;
+  $('#stageImg').src=im.src;
+  $('#sheetId').textContent=im.id;
+  $('#mPrompt').textContent=im.prompt;
+  $('#mTags').innerHTML=im.tags.map(t=>`<span class="chip tag ${t==='retouch'?'retouch':''}">${t}</span>`).join('');
+  $('#resultBlock').classList.add('hidden');
+  $('#retouchBlock').classList.remove('hidden');
+  $('#btnAutoZone').style.display = im.zone ? '' : 'none';
+  crop.classList.remove('on'); stage.classList.remove('arm');
+  $('#stageTip').classList.add('hidden'); pop.classList.remove('on');
+  $('#detailSheet').classList.add('on');
+  $('#detailSheet').scrollTop=0;
+}
+$('#sheetBack').onclick=()=>{ $('#detailSheet').classList.remove('on'); pop.classList.remove('on'); };
+
+makeCropper(stage, crop, $('#cropDims'), r=>{
+  state.zone=r;
+  if(r){ $('#stageTip').classList.add('hidden'); openPop(r); }
+});
+$('#btnRetouch').onclick=()=>{
+  stage.classList.add('arm'); crop.classList.remove('on');
+  pop.classList.remove('on'); $('#stageTip').classList.remove('hidden');
+  document.querySelector('.imgpane').scrollIntoView({behavior:'smooth',block:'center'});
+};
+$('#btnAutoZone').onclick=()=>{
+  stage.classList.add('arm');
+  const r=state.current.zone; crop.classList.add('on'); placeRect(crop,r);
+  $('#cropDims').textContent=px(r); state.zone={...r};
+  $('#stageTip').classList.add('hidden'); openPop(r);
+  document.querySelector('.imgpane').scrollIntoView({behavior:'smooth',block:'center'});
+};
+
+function openPop(r){
+  $('#popDims').textContent=px(r);
+  renderPicker(); pop.classList.add('on');
+  if(window.matchMedia('(max-width:760px)').matches) return;   // bottom sheet, no anchoring
+  const sw=stage.clientWidth, sh=stage.clientHeight;
+  const pw=pop.offsetWidth, ph=pop.offsetHeight;
+  let left=(r.x+r.w/2)*sw-pw/2;
+  let top=(r.y+r.h)*sh+10;
+  if(top+ph>sh-6) top=Math.max(6, r.y*sh-ph-10);
+  pop.style.left=Math.max(6, Math.min(left, sw-pw-6))+'px';
+  pop.style.top=Math.max(6, top)+'px';
+}
+$('#popCancel').onclick=()=>{
+  pop.classList.remove('on'); crop.classList.remove('on');
+  stage.classList.remove('arm'); state.zone=null;
+};
+function renderPicker(){
+  const p=$('#picker'); if(!p) return; p.innerHTML='';
+  state.details.forEach(d=>{
+    const el=document.createElement('div'); el.className='pick';
+    el.dataset.sel = state.detailId===d.id ? '1':'0';
+    el.innerHTML=`<div class="crop-thumb"></div><span>${d.name}</span>`;
+    thumbStyle(el.querySelector('.crop-thumb'), d.src, d.rect);
+    el.onclick=()=>{ state.detailId=d.id; renderPicker(); };
+    p.appendChild(el);
+  });
+  const none=document.createElement('div');
+  none.className='pick'; none.dataset.sel = state.detailId===null?'1':'0';
+  none.innerHTML=`<div class="none">none</div><span>prompt only</span>`;
+  none.onclick=()=>{ state.detailId=null; renderPicker(); };
+  p.appendChild(none);
+}
+
+/* ---------------- run the retouch ---------------- */
+$('#popGo').onclick=()=>{
+  state.prompt = $('#popPrompt').value.trim() ||
+    'Redraw the hang tag with the exact brand logo, keep the fabric texture and lighting';
+  pop.classList.remove('on');
+  const parent=state.current, zone={...state.zone};
+
+  $('#loading').classList.add('on');
+  $('#loadTxt').textContent='Generating retouch…';
+  setTimeout(()=>$('#loadTxt').textContent='Blending the zone…',850);
+  setTimeout(()=>{
+    $('#loading').classList.remove('on');
+    crop.classList.remove('on'); stage.classList.remove('arm');
+
+    const n=(parent.retouchCount||0)+1;
+    const result={
+      id: parent.id.replace(/_r\d+$/,'') + '_r' + n,
+      src: parent.fixed, fixed: parent.fixed,
+      prompt: state.prompt,
+      tags: [...parent.tags.filter(t=>t!=='retouch'), 'retouch'],
+      zone: parent.zone, parent: parent.id, retouchCount:0, fresh:true
+    };
+    parent.retouchCount=n;
+    state.result=result;
+
+    /* show it on the stage + in the result block */
+    $('#stageImg').src=result.src;
+    $('#beforeImg').src=parent.src;
+    $('#afterImg').src=result.src;
+    placeRect($('#zoneBox'), zone);
+    const d=state.details.find(x=>x.id===state.detailId);
+    $('#resultLineage').innerHTML =
+      `<b>${parent.id}</b> → <b>${result.id}</b> · zone ${px(zone)} · detail: ${d?d.name:'none'}<br>
+       <span style="color:var(--faint)">“${state.prompt}”</span>`;
+    $('#resultTags').innerHTML = result.tags
+      .map(t=>`<span class="chip tag ${t==='retouch'?'retouch isnew':''}">${t}</span>`).join('');
+    $('#retouchBlock').classList.add('hidden');
+    $('#resultBlock').classList.remove('hidden');
+    $('#resultBlock').scrollIntoView({behavior:'smooth',block:'center'});
+  },1700);
+};
+
+$('#btnKeep').onclick=e=>{
+  const r=state.result; if(!r) return;
+  if(!IMAGES.some(i=>i.id===r.id)){
+    IMAGES.splice(IMAGES.findIndex(i=>i.id===r.parent)+1, 0, r);
+    IMAGES.forEach(i=>{ if(i.id!==r.id) i.fresh=false; });
+  }
+  renderResults(filterOn);
+  e.target.textContent='✓ Added to product';
+  e.target.disabled=true;
+  setTimeout(()=>{
+    $('#detailSheet').classList.remove('on');
+    $('#results').scrollIntoView({behavior:'smooth',block:'center'});
+  },700);
+};
+$('#btnAgain').onclick=()=>{
+  const r=state.result;
+  if(!IMAGES.some(i=>i.id===r.id)) IMAGES.splice(IMAGES.findIndex(i=>i.id===r.parent)+1,0,r);
+  renderResults(filterOn);
+  openImage(r);
+  setTimeout(()=>$('#btnRetouch').click(),250);
+};
+
+/* ---------------- boot ---------------- */
+renderBase(); renderDetails(); renderResults(false); renderPicker();
+</script>
+</body>
+</html>
