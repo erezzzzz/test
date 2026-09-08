@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gradient Scroll</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="backdrop" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="hero">
+  <p class="eyebrow">Pure HTML &amp; CSS</p>
+  <h1>Gradient<br>Scroll</h1>
+  <p class="lede">A single continuous gradient that shifts beneath the page as you move through it. No JavaScript, no images &mdash; just a scroll-driven timeline.</p>
+  <a class="scroll-cue" href="#dawn">
+    <span>Scroll</span>
+    <span class="arrow" aria-hidden="true"></span>
+  </a>
+</header>
+
+<main>
+  <section id="dawn" class="panel">
+    <span class="index">01</span>
+    <h2>Dawn</h2>
+    <p>The backdrop is one fixed layer behind everything. As the document scrolls, its hue rotates and its stops drift &mdash; so the color you see is a function of scroll position rather than of any single section.</p>
+  </section>
+
+  <section id="drift" class="panel align-end">
+    <span class="index">02</span>
+    <h2>Drift</h2>
+    <p>Each panel fades and lifts into place on its own timeline, driven by <code>animation-timeline: view()</code>. The browser handles the easing against the scroller; nothing polls a scroll event.</p>
+  </section>
+
+  <section id="depth" class="panel">
+    <span class="index">03</span>
+    <h2>Depth</h2>
+    <p>A soft grain layer sits on top of the gradient at low opacity. It breaks up the banding that large, slow color transitions tend to show on 8-bit displays.</p>
+  </section>
+
+  <section id="dusk" class="panel align-end">
+    <span class="index">04</span>
+    <h2>Dusk</h2>
+    <p>By the bottom of the page the gradient has travelled the full sweep of its palette. Scroll back up and it retraces the same path exactly &mdash; the animation is bound to position, not to time.</p>
+  </section>
+
+  <section class="cards">
+    <article class="card">
+      <h3>Scroll timeline</h3>
+      <p>The backdrop's progress maps 1:1 to how far down the document you are.</p>
+    </article>
+    <article class="card">
+      <h3>View timeline</h3>
+      <p>Panels animate relative to their own intersection with the viewport.</p>
+    </article>
+    <article class="card">
+      <h3>Graceful fallback</h3>
+      <p>Where timelines aren't supported the gradient stays put and content simply shows.</p>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <p>Built with two files and no dependencies.</p>
+</footer>
+
+</body>
+</html>
